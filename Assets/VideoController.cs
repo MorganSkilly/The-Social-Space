@@ -11,6 +11,17 @@ public class VideoController : MonoBehaviour
     [SerializeField]
     public InputField iField;
 
+    [SerializeField]
+    public VideoClip defaultVideo;
+
+    [SerializeField]
+    public AudioSource defaultAudio;
+
+    [SerializeField]
+    public VideoPlayer cinemaScreen;
+    [SerializeField]
+    public VideoPlayer audioScreen;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -20,21 +31,80 @@ public class VideoController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-    public void Play()
+    public void PlayHD()
     {
-        //var service = Client.For(YouTube.Default);
-        //var video = service.GetVideo(iField.text);
+        string link = ParseYoutubeUrlHD(iField.text);
 
-        var youTube = YouTube.Default; // starting point for YouTube actions
-        var videoInfos = youTube.GetAllVideosAsync(iField.text).GetAwaiter().GetResult();
-        var maxResolution = videoInfos.First(i => i.Resolution == videoInfos.Max(j => j.Resolution));
+        using (var service = Client.For(YouTube.Default))
+        {
+            string url = ParseYoutubeUrlWithAudio(link);
+            string urlHD = ParseYoutubeUrlHD(link);
 
-        Debug.Log(maxResolution.Uri);
-        gameObject.GetComponent<VideoPlayer>().url = maxResolution.Uri;
-        gameObject.GetComponent<VideoPlayer>().Play();
+            audioScreen.source = VideoSource.Url;
+            cinemaScreen.source = VideoSource.Url;
+            audioScreen.url = url;
+            cinemaScreen.url = urlHD;
+            audioScreen.SetTargetAudioSource(0, defaultAudio);
+            audioScreen.Play();
+            cinemaScreen.Play();
+            audioScreen.Stop();
+            cinemaScreen.Stop();
+            audioScreen.controlledAudioTrackCount = 1;
+            audioScreen.SetTargetAudioSource(0, defaultAudio);
+            audioScreen.Play();
+            cinemaScreen.Play();
+        }
+    }
+
+    public void Play(string videoLink)
+    {
+        using (var service = Client.For(YouTube.Default))
+        {
+            string url = ParseYoutubeUrlWithAudio(videoLink);
+            string urlHD = ParseYoutubeUrlHD(videoLink);
+
+            audioScreen.source = VideoSource.Url;
+            cinemaScreen.source = VideoSource.Url;
+            audioScreen.url = url;
+            cinemaScreen.url = urlHD;
+            audioScreen.SetTargetAudioSource(0, defaultAudio);
+            audioScreen.Play();
+            cinemaScreen.Play();
+            audioScreen.Stop();
+            cinemaScreen.Stop();
+            audioScreen.controlledAudioTrackCount = 1;
+            audioScreen.SetTargetAudioSource(0, defaultAudio);
+            audioScreen.Play();
+            cinemaScreen.Play();
+        }
+    }
+
+    public void YoutubeTest()
+    {
+        string link = "https://www.youtube.com/watch?v=Yfn7OG5iw8w";
+
+        using (var service = Client.For(YouTube.Default))
+        {
+            string url = ParseYoutubeUrlWithAudio(link);
+            string urlHD = ParseYoutubeUrlHD(link);
+
+            audioScreen.source = VideoSource.Url;
+            cinemaScreen.source = VideoSource.Url;
+            audioScreen.url = url;
+            cinemaScreen.url = urlHD;
+            audioScreen.SetTargetAudioSource(0, defaultAudio);
+            audioScreen.Play();
+            cinemaScreen.Play();
+            audioScreen.Stop();
+            cinemaScreen.Stop();
+            audioScreen.controlledAudioTrackCount = 1;
+            audioScreen.SetTargetAudioSource(0, defaultAudio);
+            audioScreen.Play();
+            cinemaScreen.Play();
+        }
     }
 
     public void Pause()
@@ -45,5 +115,26 @@ public class VideoController : MonoBehaviour
     public void Stop()
     {
         gameObject.GetComponent<VideoPlayer>().Stop();
+    }
+
+    private string ParseYoutubeUrlHD(string sourceURL)
+    {
+        string highestQuality;
+
+        var youTube = YouTube.Default; // starting point for YouTube actions
+        var videoInfo = youTube.GetAllVideosAsync(sourceURL).GetAwaiter().GetResult();
+        highestQuality = videoInfo.First(i => i.Resolution == videoInfo.Max(j => j.Resolution)).Uri.ToString();
+
+        return highestQuality;
+    }
+
+    private string ParseYoutubeUrlWithAudio(string sourceURL)
+    {
+        string withAudio;
+
+        var youTube = YouTube.Default; // starting point for YouTube actions
+        withAudio = youTube.GetVideoAsync(sourceURL).GetAwaiter().GetResult().Uri.ToString();
+
+        return withAudio;
     }
 }
